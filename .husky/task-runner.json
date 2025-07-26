@@ -1,0 +1,17 @@
+{
+  "$schema": "https://alirezanet.github.io/Husky.Net/schema.json",
+  "tasks": [
+    {
+      "name": "Run csharpier",
+      "command": "dotnet",
+      "args": ["csharpier", "format", "."],
+      "include": ["**/*.{cs,csx,csproj,props,targets,xml,config}"]
+    },
+    {
+      "name": "Run xamlstyler",
+      "command": "dotnet",
+      "args": ["xstyler", "-r", "-d", "."],
+      "include": ["**/*.{xaml,axaml}"]
+    }
+  ]
+}

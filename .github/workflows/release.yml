@@ -1,0 +1,68 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  release:
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: write
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            runtime: linux-x64
+          - os: windows-latest
+            runtime: win-x64
+          - os: macos-latest
+            runtime: osx-x64
+    env:
+      Soluton_Name: SerialPortHelper
+      Project_Name: SerialPortHelper.Desktop
+      App_Name: SerialPortHelper.Desktop
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+
+      - name: Publish
+        run: |
+          dotnet publish ${{ env.Project_Name }}/${{ env.Project_Name }}.csproj \
+            -c Release \
+            -r ${{ matrix.runtime }} \
+            -o ./publish/${{ matrix.runtime }}
+        shell: bash
+
+      - name: Zip Output
+        run: |
+          cd ./publish/${{ matrix.runtime }}
+          if [ "${{ matrix.os }}" = "windows-latest" ]; then
+            powershell -Command "Compress-Archive -Path ./* -DestinationPath ../${{ env.App_Name }}-${{ matrix.runtime }}.zip"
+          else
+            zip -r ../${{ env.APP_NAME }}-${{ matrix.runtime }}.zip .
+          fi
+        shell: bash
+
+      - name: Debug File Sizes
+        run: |
+          ls -lh ./publish
+          du -sh ./publish/*/*
+        shell: bash
+
+      - name: Upload Release Assets
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ./publish/${{ env.App_Name }}-${{ matrix.runtime }}.zip
+          tag_name: ${{ github.ref_name }}
+          name: Release ${{ github.ref_name }}
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

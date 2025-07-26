@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "isRoot": true,
+  "tools": {
+    "xamlstyler.console": {
+      "version": "3.2501.8",
+      "commands": [
+        "xstyler"
+      ],
+      "rollForward": false
+    },
+    "csharpier": {
+      "version": "1.0.3",
+      "commands": [
+        "csharpier"
+      ],
+      "rollForward": false
+    },
+    "husky": {
+      "version": "0.7.2",
+      "commands": [
+        "husky"
+      ],
+      "rollForward": false
+    }
+  }
+}
