@@ -1,13 +1,33 @@
-﻿<Window x:Class="SerialPortHelper.Views.MainWindow"
-        xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:views="clr-namespace:SerialPortHelper.Views"
-        Title="串口助手"
-        d:DesignWidth="800"
-        d:DesignHeight="450"
-        Icon="/Assets/avalonia-logo.ico"
-        mc:Ignorable="d">
+﻿<u:UrsaWindow x:Class="SerialPortHelper.Views.MainWindow"
+              xmlns="https://github.com/avaloniaui"
+              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+              xmlns:u="https://irihi.tech/ursa"
+              xmlns:views="clr-namespace:SerialPortHelper.Views"
+              Title="串口助手"
+              Height="764"
+              Padding="0,32,0,0"
+              d:DesignWidth="1200"
+              d:DesignHeight="800"
+              RequestedThemeVariant="Default"
+              Icon="/Assets/avalonia-logo.ico"
+              mc:Ignorable="d">
+  <u:UrsaWindow.LeftContent>
+    <StackPanel Margin="5,5,0,0" Orientation="Horizontal">
+      <Image Width="18" Source="/Assets/avalonia-logo.ico" />
+      <TextBlock Margin="5,0,0,0"
+                 VerticalAlignment="Center"
+                 FontSize="14"
+                 FontWeight="Bold"
+                 Text="串口助手" />
+    </StackPanel>
+  </u:UrsaWindow.LeftContent>
+  <u:UrsaWindow.RightContent>
+    <StackPanel VerticalAlignment="Top">
+      <u:ThemeToggleButton IsThreeState="True" />
+    </StackPanel>
+  </u:UrsaWindow.RightContent>
+
   <views:MainView />
-</Window>
+</u:UrsaWindow>

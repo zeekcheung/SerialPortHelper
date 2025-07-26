@@ -3,14 +3,188 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:u="https://irihi.tech/ursa"
              xmlns:vm="clr-namespace:SerialPortHelper.ViewModels"
-             d:DesignWidth="800"
-             d:DesignHeight="450"
+             Margin="0,10,0,0"
+             d:DesignWidth="1200"
+             d:DesignHeight="800"
              x:DataType="vm:MainViewModel"
              mc:Ignorable="d">
   <Design.DataContext>
     <vm:MainViewModel />
   </Design.DataContext>
 
-  <TextBlock Text="Hello World" />
+  <UserControl.Styles>
+    <Style Selector="HeaderedContentControl /template/ ContentPresenter#PART_HeaderPresenter">
+      <Setter Property="FontWeight" Value="Bold" />
+    </Style>
+  </UserControl.Styles>
+
+  <Grid RowDefinitions="*,*,Auto" ColumnDefinitions="Auto,*">
+    <!-- 串口配置 -->
+    <HeaderedContentControl Grid.Row="0"
+                            Grid.RowSpan="2"
+                            Grid.Column="0"
+                            Header="串口配置">
+      <u:Form HorizontalAlignment="Stretch"
+              LabelAlignment="Center"
+              LabelPosition="Left"
+              LabelWidth="*">
+        <u:Form.Styles>
+          <Style Selector="ComboBox">
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+          </Style>
+        </u:Form.Styles>
+        <ComboBox u:FormItem.Label="串口名" ItemsSource="{CompiledBinding SerialPortNameItems}" SelectedValue="{CompiledBinding SelectedSerialPortName}" />
+        <ComboBox u:FormItem.Label="波特率" ItemsSource="{CompiledBinding BaudRatesItems}" SelectedValue="{CompiledBinding SelectedBaudRate}" />
+        <ComboBox u:FormItem.Label="校验位" ItemsSource="{CompiledBinding ParityItems}" SelectedValue="{CompiledBinding SelectedParity}" />
+        <ComboBox u:FormItem.Label="数据位" ItemsSource="{CompiledBinding DataBitsItems}" SelectedValue="{CompiledBinding SelectedDataBits}" />
+        <ComboBox u:FormItem.Label="停止位" ItemsSource="{CompiledBinding StopBitsItems}" SelectedValue="{CompiledBinding SelectedStopBits}" />
+        <ComboBox u:FormItem.Label="编码格式" ItemsSource="{CompiledBinding EncodingItems}" SelectedValue="{CompiledBinding SelectedEncoding}" />
+        <ComboBox u:FormItem.Label="握手格式" ItemsSource="{CompiledBinding HandshakeItems}" SelectedValue="{CompiledBinding SelectedHandshake}" />
+        <NumericUpDown u:FormItem.Label="发送超时"
+                       InnerRightContent="ms"
+                       Minimum="-1"
+                       Increment="1"
+                       Value="{CompiledBinding SendTimeout}" />
+        <NumericUpDown u:FormItem.Label="接收超时"
+                       InnerRightContent="ms"
+                       Minimum="-1"
+                       Increment="1"
+                       Value="{CompiledBinding ReceiveTimeout}" />
+        <NumericUpDown u:FormItem.Label="接收阈值"
+                       Minimum="1"
+                       Increment="1"
+                       InnerRightContent="byte"
+                       Value="{CompiledBinding ReceivedBytesThreshold}" />
+        <NumericUpDown u:FormItem.Label="发送缓冲"
+                       Minimum="1"
+                       InnerRightContent="byte"
+                       Value="{CompiledBinding WriteBufferSize}" />
+        <NumericUpDown u:FormItem.Label="接收缓冲"
+                       Minimum="1"
+                       InnerRightContent="byte"
+                       Value="{CompiledBinding ReadBufferSize}" />
+        <Grid u:FormItem.NoLabel="True" ColumnDefinitions="*,*">
+          <CheckBox Grid.Column="0" Content="RTS" IsChecked="{CompiledBinding IsRtsEnable}" />
+          <CheckBox Grid.Column="1" Content="DTR" IsChecked="{CompiledBinding IsDtrEnable}" />
+        </Grid>
+        <ToggleSwitch u:FormItem.Label="打开态"
+                      Theme="{StaticResource SimpleToggleSwitch}"
+                      IsChecked="{CompiledBinding IsSerialPortOpen}"
+                      Command="{CompiledBinding ToggleSerialPortCommand}" />
+      </u:Form>
+    </HeaderedContentControl>
+    <!-- 接收区 -->
+    <HeaderedContentControl Grid.Row="0" Grid.Column="1">
+      <HeaderedContentControl.Header>
+        <StackPanel Orientation="Horizontal" Spacing="16">
+          <TextBlock VerticalAlignment="Center" Text="接收区" />
+          <CheckBox Content="十六进制" IsChecked="{CompiledBinding IsHexReceiveData}" />
+          <CheckBox Content="自动清空" IsChecked="{CompiledBinding IsAutoClearReceiveData}" />
+          <NumericUpDown MinWidth="132"
+                         Minimum="1"
+                         Increment="1"
+                         InnerRightContent="byte"
+                         Classes="Small"
+                         Watermark="清空阈值"
+                         Value="{CompiledBinding AutoClearReceiveDataThreshold}" />
+        </StackPanel>
+      </HeaderedContentControl.Header>
+      <Grid Margin="0,8,0,0"
+            RowDefinitions="*,Auto"
+            ColumnDefinitions="*"
+            RowSpacing="8">
+        <ScrollViewer Grid.Row="0"
+                      Margin="0,8,0,0"
+                      HorizontalAlignment="Stretch"
+                      VerticalAlignment="Stretch">
+          <TextBlock VerticalAlignment="Stretch" TextWrapping="Wrap" Text="{CompiledBinding ReceivedDataText}" />
+        </ScrollViewer>
+        <Grid Grid.Row="1" ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="8">
+          <u:PathPicker Title="选择路径" AllowMultiple="False" SelectedPathsText="{CompiledBinding SelectedSaveFilePath, Mode=OneWayToSource}" />
+          <Button Grid.Column="1" Content="保存数据" Command="{CompiledBinding SaveReceivedDataCommand}" />
+          <Button Grid.Column="2" Content="清空接收" Command="{CompiledBinding ClearReceiveDataCommand}" />
+          <ToggleButton Grid.Column="3" Content="接收数据" IsChecked="{CompiledBinding IsReceiveData}" />
+        </Grid>
+      </Grid>
+    </HeaderedContentControl>
+    <!-- 发送区 -->
+    <HeaderedContentControl Grid.Row="1" Grid.Column="1">
+      <HeaderedContentControl.Header>
+        <StackPanel Orientation="Horizontal" Spacing="16">
+          <TextBlock VerticalAlignment="Center" Text="发送区" />
+          <CheckBox Content="十六进制" IsChecked="{CompiledBinding IsHexSendData}" />
+          <CheckBox Content="自动发送" IsChecked="{CompiledBinding IsAutoSendData}" />
+          <NumericUpDown MinWidth="122"
+                         Classes="Small"
+                         Minimum="1"
+                         Increment="1"
+                         InnerRightContent="ms"
+                         Watermark="发送延迟"
+                         Value="{CompiledBinding AutoSendDataDelay}" />
+        </StackPanel>
+      </HeaderedContentControl.Header>
+      <Grid RowDefinitions="*,Auto" ColumnDefinitions="*" RowSpacing="8">
+        <ScrollViewer Grid.Row="0"
+                      Margin="0,8,0,0"
+                      HorizontalAlignment="Stretch"
+                      VerticalAlignment="Stretch">
+          <TextBox VerticalAlignment="Stretch" TextWrapping="Wrap" Text="{CompiledBinding SendDataText}" />
+        </ScrollViewer>
+        <Grid Grid.Row="1"
+              HorizontalAlignment="Stretch"
+              ColumnSpacing="8"
+              ColumnDefinitions="*,Auto,Auto,Auto">
+          <u:PathPicker Title="选择路径" AllowMultiple="False" SelectedPathsText="{CompiledBinding SelectedSendFilePath, Mode=OneWayToSource}" />
+          <Button Grid.Column="1" Content="发送文件" Command="{CompiledBinding SendFileCommand}" />
+          <Button Grid.Column="2" Content="清空发送" Command="{CompiledBinding ClearSendDataCommand}" />
+          <Button Grid.Column="3" Content="手动发送" Command="{CompiledBinding SendDataCommand}" />
+        </Grid>
+      </Grid>
+    </HeaderedContentControl>
+    <!-- 状态行 -->
+    <u:Form Grid.Row="2"
+            Grid.Column="0"
+            Grid.ColumnSpan="2"
+            HorizontalAlignment="Stretch"
+            LabelAlignment="Center"
+            LabelPosition="Left"
+            LabelWidth="*">
+      <u:Form.ItemsPanel>
+        <ItemsPanelTemplate>
+          <UniformGrid Rows="1" />
+        </ItemsPanelTemplate>
+      </u:Form.ItemsPanel>
+
+      <u:Form.Styles>
+        <Style Selector="u|FormItem">
+          <Setter Property="HorizontalAlignment" Value="Center" />
+          <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+      </u:Form.Styles>
+
+      <TextBlock u:FormItem.Label="当前状态：" Text="{CompiledBinding StatusText}" />
+      <u:FormItem Label="发送计数：">
+        <StackPanel Orientation="Horizontal" Spacing="8">
+          <TextBlock MinWidth="36" Text="{CompiledBinding SendDataCount}" />
+          <TextBlock Text="byte" />
+        </StackPanel>
+      </u:FormItem>
+      <u:FormItem Label="接收计数：">
+        <StackPanel Orientation="Horizontal" Spacing="8">
+          <TextBlock MinWidth="36" Text="{CompiledBinding ReceivedDataCount}" />
+          <TextBlock Text="byte" />
+        </StackPanel>
+      </u:FormItem>
+      <u:IconButton HorizontalAlignment="Stretch"
+                    u:FormItem.NoLabel="True"
+                    Icon="{StaticResource SemiIconRefresh}"
+                    Classes="Tertiary Small"
+                    Foreground="{DynamicResource ComboBoxDropDownForeground}"
+                    Theme="{DynamicResource BorderlessIconButton}"
+                    Content="重置状态"
+                    Command="{CompiledBinding ResetStatusCommand}" />
+    </u:Form>
+  </Grid>
 </UserControl>

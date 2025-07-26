@@ -1,10 +1,14 @@
 ﻿<Application x:Class="SerialPortHelper.App"
              xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:semi="https://irihi.tech/semi"
+             xmlns:ursa="https://irihi.tech/ursa/themes/semi"
              RequestedThemeVariant="Default">
-  <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
-
   <Application.Styles>
-    <FluentTheme />
+    <semi:SemiTheme Locale="zh-CN" />
+    <ursa:SemiTheme Locale="zh-CN" />
+
+    <StyleInclude Source="/Styles/GlobalStyles.axaml" />
+    <StyleInclude Source="/Styles/DataValidationErrorsStyles.axaml" />
   </Application.Styles>
 </Application>
