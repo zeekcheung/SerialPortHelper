@@ -49,6 +49,11 @@ namespace SerialPortHelper.ViewModels
         public static IReadOnlyList<Handshake> HandshakeItems { get; set; } =
             Enum.GetValues<Handshake>();
 
+        /// <summary>
+        /// 串口实例
+        /// </summary>
+        private readonly SerialPort _serialPort = new();
+
         [ObservableProperty]
         public partial string SelectedSerialPortName { get; set; } =
             SerialPortNameItems.Count > 0 ? SerialPortNameItems[0] : "";
@@ -81,10 +86,10 @@ namespace SerialPortHelper.ViewModels
         public partial int ReceivedBytesThreshold { get; set; } = 1;
 
         [ObservableProperty]
-        public partial int WriteBufferSize { get; set; } = 2048;
+        public partial int WriteBufferSize { get; set; }
 
         [ObservableProperty]
-        public partial int ReadBufferSize { get; set; } = 4096;
+        public partial int ReadBufferSize { get; set; }
 
         [ObservableProperty]
         public partial bool IsRtsEnable { get; set; } = false;
@@ -93,7 +98,7 @@ namespace SerialPortHelper.ViewModels
         public partial bool IsDtrEnable { get; set; } = false;
 
         [ObservableProperty]
-        public partial bool IsSerialPortOpen { get; set; } = false;
+        public partial bool IsSerialPortOpen { get; set; }
 
         [ObservableProperty]
         public partial bool IsAutoClearReceiveData { get; set; } = false;
@@ -147,31 +152,84 @@ namespace SerialPortHelper.ViewModels
 
         public MainViewModel()
         {
+            IsSerialPortOpen = _serialPort.IsOpen;
+            WriteBufferSize = _serialPort.WriteBufferSize;
+            ReadBufferSize = _serialPort.ReadBufferSize;
+
             StatusText = "初始化完成";
         }
 
         [RelayCommand]
         private void ToggleSerialPort()
         {
-            MessageBox.ShowAsync("切换状态");
-
-            if (IsSerialPortOpen)
+            // 打开或关闭串口
+            if (_serialPort.IsOpen)
                 CloseSerialPort();
             else
                 OpenSerialPort();
 
-            // TODO: 手动更新串口打开状态
+            // 将界面中的串口打开状态设置为串口的实际打开状态
+            IsSerialPortOpen = _serialPort.IsOpen;
         }
 
         /// <summary>
         /// 打开串口
         /// </summary>
-        private void OpenSerialPort() { }
+        private void OpenSerialPort()
+        {
+            try
+            {
+                // 设置串口参数
+                _serialPort.PortName = SelectedSerialPortName;
+                _serialPort.BaudRate = SelectedBaudRate;
+                _serialPort.Parity = SelectedParity;
+                _serialPort.DataBits = SelectedDataBits;
+                _serialPort.StopBits = SelectedStopBits;
+                _serialPort.Encoding = Encoding.GetEncoding(SelectedEncoding);
+                _serialPort.Handshake = SelectedHandshake;
+                _serialPort.ReadTimeout = ReceiveTimeout;
+                _serialPort.WriteTimeout = SendTimeout;
+                _serialPort.ReceivedBytesThreshold = ReceivedBytesThreshold;
+                _serialPort.WriteBufferSize = WriteBufferSize;
+                _serialPort.ReadBufferSize = ReadBufferSize;
+                _serialPort.RtsEnable = IsRtsEnable;
+                _serialPort.DtrEnable = IsDtrEnable;
+
+                // 打开串口
+                _serialPort.Open();
+
+                StatusText = $"串口 {_serialPort.PortName} 已打开";
+            }
+            catch (Exception ex)
+            {
+                MessageBox.ShowAsync(
+                    $"打开串口失败：{ex.Message}",
+                    icon: MessageBoxIcon.Error,
+                    button: MessageBoxButton.OK
+                );
+            }
+        }
 
         /// <summary>
         /// 关闭串口
         /// </summary>
-        private static void CloseSerialPort() { }
+        private void CloseSerialPort()
+        {
+            try
+            {
+                _serialPort.Close();
+
+                StatusText = $"串口 {_serialPort.PortName} 已关闭";
+            }
+            catch (Exception ex)
+            {
+                MessageBox.ShowAsync(
+                    $"关闭串口失败：{ex.Message}",
+                    icon: MessageBoxIcon.Error,
+                    button: MessageBoxButton.OK
+                );
+            }
+        }
 
         [RelayCommand]
         private void SendData() { }
