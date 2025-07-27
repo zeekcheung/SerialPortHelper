@@ -130,7 +130,10 @@
                       Margin="0,8,0,0"
                       HorizontalAlignment="Stretch"
                       VerticalAlignment="Stretch">
-          <TextBox VerticalAlignment="Stretch" TextWrapping="Wrap" Text="{CompiledBinding SendDataText}" />
+          <TextBox VerticalAlignment="Stretch"
+                   TextWrapping="Wrap"
+                   Text="{CompiledBinding SendDataText}"
+                   LostFocus="OnTxtSendDataLostFocus" />
         </ScrollViewer>
         <Grid Grid.Row="1"
               HorizontalAlignment="Stretch"
@@ -159,7 +162,6 @@
 
       <u:Form.Styles>
         <Style Selector="u|FormItem">
-          <Setter Property="HorizontalAlignment" Value="Center" />
           <Setter Property="VerticalAlignment" Value="Center" />
         </Style>
       </u:Form.Styles>
