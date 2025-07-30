@@ -1,10 +1,13 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.IO.Ports;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using System.Timers;
 using Avalonia.Interactivity;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using SerialPortHelper.Helpers;
@@ -408,7 +411,55 @@ namespace SerialPortHelper.ViewModels
         }
 
         [RelayCommand]
-        private void SendFile() { }
+        private async Task SendFile()
+        {
+            // 判断是否已选择文件
+            if (string.IsNullOrEmpty(SelectedSendFilePath))
+            {
+                await MessageBox.ShowAsync(
+                    "请选择要发送的文件",
+                    icon: MessageBoxIcon.Error,
+                    button: MessageBoxButton.OK
+                );
+                return;
+            }
+
+            // 判断文件是否存在
+            if (!File.Exists(SelectedSendFilePath))
+            {
+                await MessageBox.ShowAsync(
+                    $"文件 {SelectedSendFilePath} 不存在",
+                    icon: MessageBoxIcon.Error,
+                    button: MessageBoxButton.OK
+                );
+                return;
+            }
+
+            // 异步发送文件
+            await Task.Run(async () =>
+            {
+                // 读取文件内容
+                var text = await File.ReadAllTextAsync(SelectedSendFilePath, _serialPort.Encoding);
+                var data = _serialPort.Encoding.GetBytes(text);
+
+                // 分页发送
+                var offset = 0;
+                var pageSize = _serialPort.WriteBufferSize;
+                var total = data.Length;
+                while (offset < total)
+                {
+                    var count = Math.Min(pageSize, total - offset);
+                    _serialPort.Write(data, offset, count);
+                    offset += count;
+
+                    var offsetTemp = offset;
+                    Dispatcher.UIThread.Post(() =>
+                    {
+                        StatusText = $"文件发送进度：{offsetTemp}/{total}";
+                    });
+                }
+            });
+        }
 
         [RelayCommand]
         private void ClearReceiveData()
@@ -420,7 +471,45 @@ namespace SerialPortHelper.ViewModels
         }
 
         [RelayCommand]
-        private void SaveReceivedData() { }
+        private async Task SaveReceivedData()
+        {
+            // 判断是否有接收到的数据
+            if (string.IsNullOrEmpty(ReceivedDataText))
+            {
+                await MessageBox.ShowAsync(
+                    "没有接收到数据",
+                    icon: MessageBoxIcon.Information,
+                    button: MessageBoxButton.OK
+                );
+                return;
+            }
+
+            // 初始化保存文件路径
+            var filePath = SelectedSaveFilePath;
+            if (string.IsNullOrEmpty(filePath))
+            {
+                filePath = $"ReceivedData_{DateTime.Now:yyyyMMddHHmmss}.txt";
+            }
+
+            // 异步保存文件
+            try
+            {
+                await File.WriteAllTextAsync(filePath, ReceivedDataText);
+                await MessageBox.ShowAsync(
+                    $"接收数据已保存到文件 {filePath}",
+                    icon: MessageBoxIcon.Information,
+                    button: MessageBoxButton.OK
+                );
+            }
+            catch (Exception ex)
+            {
+                await MessageBox.ShowAsync(
+                    $"保存接收数据失败：{ex.Message}",
+                    icon: MessageBoxIcon.Error,
+                    button: MessageBoxButton.OK
+                );
+            }
+        }
 
         [RelayCommand]
         private void ResetStatus()
