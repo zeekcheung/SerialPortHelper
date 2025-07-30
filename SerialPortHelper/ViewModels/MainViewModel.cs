@@ -218,6 +218,20 @@ namespace SerialPortHelper.ViewModels
             _autoSendDataTimer.Stop();
         }
 
+        partial void OnIsRtsEnableChanged(bool value)
+        {
+            _serialPort.RtsEnable = value;
+
+            StatusText = $"RTS 已{(value ? "打开" : "关闭")}";
+        }
+
+        partial void OnIsDtrEnableChanged(bool value)
+        {
+            _serialPort.DtrEnable = value;
+
+            StatusText = $"DTR 已{(value ? "打开" : "关闭")}";
+        }
+
         partial void OnIsHexSendDataChanged(bool value)
         {
             SendDataText = value
