@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.IO.Ports;
 using System.Linq;
@@ -11,6 +12,7 @@ using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using SerialPortHelper.Helpers;
+using SerialPortHelper.Protocols;
 using Ursa.Controls;
 
 namespace SerialPortHelper.ViewModels
@@ -143,6 +145,12 @@ namespace SerialPortHelper.ViewModels
         [ObservableProperty]
         public partial string SelectedSendFilePath { get; set; } = string.Empty;
 
+        [ObservableProperty]
+        public partial bool IsParseReceiveData { get; set; } = false;
+
+        [ObservableProperty]
+        public partial ObservableCollection<FrameItem> FrameItems { get; set; } = [];
+
         /// <summary>
         /// 串口实例
         /// </summary>
@@ -163,6 +171,16 @@ namespace SerialPortHelper.ViewModels
         /// </summary>
         private readonly List<byte> _receiveBuffer = [];
 
+        /// <summary>
+        /// 数据协议
+        /// </summary>
+        private readonly IProtocol _protocol = new SampleProtocol();
+
+        /// <summary>
+        /// 帧处理器
+        /// </summary>
+        private FrameHandler? _frameHandler;
+
         static MainViewModel()
         {
             // 注册额外的编码
@@ -174,8 +192,6 @@ namespace SerialPortHelper.ViewModels
         public MainViewModel()
         {
             IsSerialPortOpen = _serialPort.IsOpen;
-            WriteBufferSize = _serialPort.WriteBufferSize;
-            ReadBufferSize = _serialPort.ReadBufferSize;
 
             // 设置自动发送数据定时器
             _autoSendDataTimer.Interval = AutoSendDataDelay;
@@ -352,6 +368,18 @@ namespace SerialPortHelper.ViewModels
 
             // 将接收到的数据添加到接收区
             ReceivedDataText += data;
+
+            // 解析接收数据
+            if (IsParseReceiveData)
+            {
+                // 设置帧处理器
+                _frameHandler ??= (frame, valid) =>
+                {
+                    FrameItems.Add(new FrameItem { Frame = frame, Valid = valid });
+                };
+
+                _protocol.ParseAndCheck(buffer, _frameHandler);
+            }
         }
 
         /// <summary>
@@ -521,5 +549,11 @@ namespace SerialPortHelper.ViewModels
 
             StatusText = "状态已重置";
         }
+    }
+
+    public class FrameItem
+    {
+        public required byte[] Frame { get; set; }
+        public bool Valid { get; set; }
     }
 }
